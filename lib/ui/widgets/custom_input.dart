@@ -16,9 +16,15 @@ class CustomInput extends StatelessWidget {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, child) {
+        // debug: print controller empty state
+        // print('[DEBUG] controller: ${value.text.isEmpty}');
         return TextFormField(
           controller: controller,
           decoration: InputDecoration(
+            // border: OutlineInputBorder(
+            //   borderRadius: BorderRadius.circular(8.0),
+            //   borderSide: BorderSide(color: Colors.red, width: 2.0),
+            // ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
               borderSide: BorderSide(
