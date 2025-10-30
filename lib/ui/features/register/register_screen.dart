@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_talknet_app/ui/features/register/register_view_model.dart';
+import 'package:flutter_talknet_app/ui/features/validators/email_validator.dart';
+import 'package:flutter_talknet_app/ui/features/validators/full_name_validator.dart';
+import 'package:flutter_talknet_app/ui/features/validators/password_validator.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_button.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_text_button.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_talknet_app/utils/routes_enum.dart';
 
-class RegisterScreen extends StatelessWidget {
-  RegisterScreen({super.key});
+/// Tela de registro de novos usuários
+class RegisterScreen extends StatefulWidget {
+  /// Construtor da classe [RegisterScreen]
+  const RegisterScreen({super.key});
 
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController passwordConfirmationController =
-      TextEditingController();
-  final TextEditingController fullNameController = TextEditingController();
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final RegisterViewModel viewModel = RegisterViewModel();
+
+  @override
+  void initState() {
+    viewModel.initToast(context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,119 +34,93 @@ class RegisterScreen extends StatelessWidget {
             builder: (context, constraints) {
               return SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(24),
                   child: SizedBox(
                     width: constraints.maxWidth > 768
                         ? 768
                         : constraints.maxWidth,
-                    child: Column(
-                      spacing: 18,
-                      children: [
-                        Image(
-                          image: AssetImage('assets/logos/logo_login.png'),
-                          height: 280,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            'Registro',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                        ),
-                        CustomInput(
-                          hint: 'Digite seu email',
-                          label: 'Email',
-                          controller: emailController,
-                        ),
-                        CustomInput(
-                          hint: 'Digite seu nome completo',
-                          label: 'Nome',
-                          controller: fullNameController,
-                        ),
-                        CustomInput(
-                          hint: 'Digite sua senha',
-                          label: 'Senha',
-                          controller: passwordController,
-                        ),
-                        CustomInput(
-                          hint: 'Confirme sua senha',
-                          label: 'Confirmação da senha',
-                          controller: passwordConfirmationController,
-                        ),
-                        CustomButton(
-                          buttonText: 'Registrar',
-                          backgroundColor: Color(0xFF03A9F4),
-                          buttonAction: () async {
-                            if (emailController.text.isEmpty) {
-                              SnackBar snackBar = SnackBar(
-                                content: Text('O email não pode ser vazio'),
-                                backgroundColor: Colors.red,
-                              );
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(snackBar);
-                              return;
-                            }
-                            if (fullNameController.text.isEmpty) {
-                              SnackBar snackBar = SnackBar(
-                                content: Text('O nome não pode ser vazio'),
-                                backgroundColor: Colors.red,
-                              );
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(snackBar);
-                              return;
-                            }
-                            if (passwordController.text.isEmpty) {
-                              SnackBar snackBar = SnackBar(
-                                content: Text('A senha não pode ser vazia'),
-                                backgroundColor: Colors.red,
-                              );
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(snackBar);
-                              return;
-                            }
-
-                            if (passwordController.text !=
-                                passwordConfirmationController.text) {
-                              SnackBar snackBar = SnackBar(
-                                content: Text('As senhas não coincidem'),
-                                backgroundColor: Colors.red,
-                              );
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(snackBar);
-                              return;
-                            }
-
-                            final supabase = Supabase.instance.client;
-
-                            final response = await supabase.auth.signUp(
-                              password: passwordController.text,
-                              email: emailController.text,
-                            );
-
-                            print(response);
-                          },
-                        ),
-                        CustomTextButton(
-                          buttonText: 'Já tem uma conta? Faça login',
-                          buttonAction: () {
-                            Navigator.pushNamed(
-                              context,
-                              RoutesEnum.login.route,
-                            ); // Named route
-                          },
-                        ),
-                      ],
-                    ),
+                    child: FormWidget(viewModel: viewModel),
                   ),
                 ),
               );
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Widget do formulário de registro
+class FormWidget extends StatefulWidget {
+  /// Construtor da classe [FormWidget]
+  const FormWidget({required this.viewModel, super.key});
+
+  /// ViewModel associado ao formulário
+  final RegisterViewModel viewModel;
+
+  @override
+  State<FormWidget> createState() => _FormWidgetState();
+}
+
+class _FormWidgetState extends State<FormWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: widget.viewModel.formKey,
+      child: Column(
+        spacing: 4,
+        children: [
+          const Image(
+            image: AssetImage('assets/logos/logo_login.png'),
+            height: 280,
+          ),
+          const SizedBox(
+            width: double.infinity,
+            child: Text('Registro', style: TextStyle(fontSize: 20)),
+          ),
+          CustomInput(
+            hint: 'Digite seu email',
+            label: 'Email',
+            controller: widget.viewModel.emailController,
+            validator: (value) => emailValidator(value),
+          ),
+          CustomInput(
+            hint: 'Digite seu nome completo',
+            label: 'Nome',
+            controller: widget.viewModel.fullNameController,
+            validator: (value) => fullNameValidator(value),
+          ),
+          CustomInput(
+            obsecureText: true,
+            hint: 'Digite sua senha',
+            label: 'Senha',
+            controller: widget.viewModel.passwordController,
+            validator: (value) => passwordValidator(value),
+          ),
+          CustomInput(
+            obsecureText: true,
+            hint: 'Confirme sua senha',
+            label: 'Confirmação da senha',
+            controller: widget.viewModel.passwordConfirmationController,
+            validator: (value) =>
+                widget.viewModel.passwordConfirmationValidator(value),
+          ),
+          CustomButton(
+            icon: widget.viewModel.isLoading ? Icons.hourglass_empty : null,
+            buttonText: 'Registrar',
+            backgroundColor: const Color(0xFF03A9F4),
+            buttonAction: () async =>
+                widget.viewModel.registerButtonAction(context),
+          ),
+          CustomTextButton(
+            icon: Icons.login,
+            buttonText: 'Já tem uma conta? Faça login',
+            buttonAction: () => widget.viewModel.navigateToLogin(
+              Navigator.of(context),
+            ),
+          ),
+        ],
       ),
     );
   }

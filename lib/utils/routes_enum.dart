@@ -3,7 +3,10 @@ enum RoutesEnum {
   login('/login'),
 
   /// Rota de registro de novo usuário
-  register('/register');
+  register('/register'),
+
+  /// Rota principal do projeto
+  home('/home');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);
