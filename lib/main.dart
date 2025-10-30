@@ -17,7 +17,9 @@ Future<void> main() async {
   runApp(MainApp());
 }
 
+/// Aplicação principal
 class MainApp extends StatelessWidget {
+  /// Constructor da classe [MainApp]
   const MainApp({super.key});
 
   @override
