@@ -9,10 +9,11 @@ class CustomInput extends StatelessWidget {
     required this.controller,
     super.key,
     this.validator,
-    this.obsecureText = false,
+    this.obscureText = false,
+    this.showPasswordToggle = false,
   });
 
-  /// Construtor da classe [CustomInput]
+  /// Rótulo do campo
   final String label;
 
   /// Texto de dica exibido no campo
@@ -25,52 +26,69 @@ class CustomInput extends StatelessWidget {
   final String? Function(String?)? validator;
 
   /// Indica se o texto deve ser ocultado (para senhas)
-  final bool obsecureText;
+  final bool obscureText;
+
+  /// Controla se o botão de mostrar/esconder senha deve ser exibido
+  final bool showPasswordToggle;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, child) {
-        // debug: print controller empty state
-        // print('[DEBUG] controller: ${value.text.isEmpty}');
-        return SizedBox(
-          height: 68,
-          child: TextFormField(
-            obscureText: obsecureText,
-            validator: validator,
-            controller: controller,
+    // Notificação que mostra se o texto deve ser obscurecido ou não
+    final obscureNotifier = ValueNotifier<bool>(obscureText);
 
-            decoration: InputDecoration(
-              // border: OutlineInputBorder(
-              //   borderRadius: BorderRadius.circular(8.0),
-              //   borderSide: BorderSide(color: Colors.red, width: 2.0),
-              // ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: value.text.isEmpty ? Colors.grey : Colors.blue,
-                  width: 2,
+    return ValueListenableBuilder<bool>(
+      valueListenable: obscureNotifier,
+      builder: (context, isObscure, child) {
+        return ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            return SizedBox(
+              height: 68,
+              child: TextFormField(
+                obscureText: isObscure,
+                validator: validator,
+                controller: controller,
+                decoration: InputDecoration(
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: value.text.isEmpty ? Colors.grey : Colors.blue,
+                      width: 2,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      color: Colors.blue,
+                      width: 2.5,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
+                  ),
+                  labelText: label,
+                  hintText: hint,
+                  fillColor: Colors.white,
+                  filled: true,
+                  suffixIcon: showPasswordToggle
+                      ? IconButton(
+                          onPressed: () {
+                            obscureNotifier.value = !isObscure;
+                          },
+                          icon: Icon(
+                            isObscure ? Icons.visibility : Icons.visibility_off,
+                          ),
+                        )
+                      : null,
                 ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.blue, width: 2.5),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.red, width: 2.5),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.red, width: 2.5),
-              ),
-              labelText: label,
-              hint: Text(hint),
-              fillColor: Colors.white,
-              filled: true,
-            ),
-          ),
+            );
+          },
         );
       },
     );

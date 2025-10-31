@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 
 /// Botão customizado reutilizável
 class CustomButton extends StatelessWidget {
@@ -29,10 +30,13 @@ class CustomButton extends StatelessWidget {
       height: 52,
       width: double.infinity,
       child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white),
+        icon: Icon(icon, color: AppColors.backgroundLight),
         label: Text(
           buttonText,
-          style: const TextStyle(color: Colors.white, fontSize: 20),
+          style: const TextStyle(
+            color: AppColors.textWhite,
+            fontSize: 20,
+          ),
         ),
         style: ButtonStyle(
           backgroundColor: WidgetStatePropertyAll(backgroundColor),

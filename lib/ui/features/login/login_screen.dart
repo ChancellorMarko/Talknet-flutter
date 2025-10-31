@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_button.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_text_button.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
-
-// TODO: Implementar obscurecer senha
-// TODO: Implementar olhinho de visualizar senha
 
 /// Tela de login
 class LoginScreen extends StatelessWidget {
@@ -52,6 +50,8 @@ class LoginScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 18),
                         CustomInput(
+                          showPasswordToggle: true,
+                          obscureText: true,
                           hint: 'Digite sua senha',
                           label: 'Senha',
                           controller: passwordController,
@@ -66,7 +66,7 @@ class LoginScreen extends StatelessWidget {
                         const SizedBox(height: 18),
                         CustomButton(
                           buttonText: 'Entrar',
-                          backgroundColor: const Color(0xFF03A9F4),
+                          backgroundColor: AppColors.primaryBlue,
                           buttonAction: () async {
                             final navigator = Navigator.of(context);
                             final supabase = Supabase.instance.client;

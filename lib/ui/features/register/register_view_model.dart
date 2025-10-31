@@ -4,6 +4,7 @@ import 'package:flutter_talknet_app/repositories/interfaces/register_repository.
 import 'package:flutter_talknet_app/services/register_service.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_error_toast.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -86,7 +87,7 @@ class RegisterViewModel extends ChangeNotifier {
         child: const CustomToast(
           errorText:
               '''Registro realizado com sucesso! Verifique seu email para confirmar.''',
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
           icon: Icons.check_circle,
         ),
         gravity: ToastGravity.TOP,
@@ -104,7 +105,7 @@ class RegisterViewModel extends ChangeNotifier {
       fToast.showToast(
         child: CustomToast(
           errorText: errorText,
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           icon: Icons.error,
         ),
         gravity: ToastGravity.TOP,

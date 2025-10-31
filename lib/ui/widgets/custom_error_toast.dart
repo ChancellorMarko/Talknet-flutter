@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 
 /// Toast customizado reutilizável
 class CustomToast extends StatelessWidget {
@@ -30,9 +31,9 @@ class CustomToast extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white),
+          Icon(icon, color: AppColors.textWhite),
           const SizedBox(width: 12),
-          Text(errorText, style: const TextStyle(color: Colors.white)),
+          Text(errorText, style: const TextStyle(color: AppColors.textWhite)),
         ],
       ),
     );

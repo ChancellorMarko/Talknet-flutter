@@ -6,6 +6,7 @@ import 'package:flutter_talknet_app/ui/features/validators/password_validator.da
 import 'package:flutter_talknet_app/ui/widgets/custom_button.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_text_button.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 
 /// Tela de registro de novos usuários
 class RegisterScreen extends StatefulWidget {
@@ -69,7 +70,7 @@ class _FormWidgetState extends State<FormWidget> {
     return Form(
       key: widget.viewModel.formKey,
       child: Column(
-        spacing: 4,
+        spacing: 8,
         children: [
           const Image(
             image: AssetImage('assets/logos/logo_login.png'),
@@ -92,14 +93,14 @@ class _FormWidgetState extends State<FormWidget> {
             validator: (value) => fullNameValidator(value),
           ),
           CustomInput(
-            obsecureText: true,
+            showPasswordToggle: true,
             hint: 'Digite sua senha',
             label: 'Senha',
             controller: widget.viewModel.passwordController,
             validator: (value) => passwordValidator(value),
           ),
           CustomInput(
-            obsecureText: true,
+            showPasswordToggle: true,
             hint: 'Confirme sua senha',
             label: 'Confirmação da senha',
             controller: widget.viewModel.passwordConfirmationController,
@@ -109,7 +110,7 @@ class _FormWidgetState extends State<FormWidget> {
           CustomButton(
             icon: widget.viewModel.isLoading ? Icons.hourglass_empty : null,
             buttonText: 'Registrar',
-            backgroundColor: const Color(0xFF03A9F4),
+            backgroundColor: AppColors.primaryBlue,
             buttonAction: () async =>
                 widget.viewModel.registerButtonAction(context),
           ),

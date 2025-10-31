@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Guia de Design e Cores - App
+/// Guia de Cores do App
 /// Este arquivo contém toda a configuração de tema, cores e componentes
 /// otimizados para usuários do aplicativo.
 
@@ -24,6 +24,7 @@ class AppColors {
   static const Color textDark = Color(0xFF2D3748);
   static const Color textMedium = Color(0xFF4A5568);
   static const Color textLight = Color(0xFF718096);
+  static const Color textWhite = Color(0xFFFFFFFF);
 
   // Cores de Status
   static const Color success = Color(0xFF48BB78);

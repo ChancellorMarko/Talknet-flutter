@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 
 /// Botão de texto customizado reutilizável
 class CustomTextButton extends StatelessWidget {
@@ -23,8 +24,8 @@ class CustomTextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton.icon(
       onPressed: buttonAction,
-      icon: Icon(icon, color: const Color(0xFF0F4888)),
-      label: Text(buttonText, style: const TextStyle(color: Color(0xFF0F4888))),
+      icon: Icon(icon, color: AppColors.info),
+      label: Text(buttonText, style: const TextStyle(color: AppColors.info)),
     );
   }
 }
