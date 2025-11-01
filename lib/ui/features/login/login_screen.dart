@@ -34,7 +34,7 @@ class LoginScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         const Image(
-                          image: AssetImage('assets/logos/logo_login.png'),
+                          image: AssetImage('assets/logos/talknet_logo.png'),
                           height: 280,
                         ),
                         const SizedBox(height: 18),
