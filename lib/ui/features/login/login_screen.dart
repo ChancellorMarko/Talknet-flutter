@@ -7,15 +7,112 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
 
 /// Tela de login
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   /// Construtor da classe [LoginScreen]
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   /// Controlador do campo de email
   final TextEditingController emailController = TextEditingController();
 
   /// Controlador do campo de senha
   final TextEditingController passwordController = TextEditingController();
+
+  /// Indica se está processando o login
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  /// Realiza o login do usuário
+  Future<void> _handleLogin() async {
+    // Validação básica
+    if (emailController.text.trim().isEmpty) {
+      _showError('Por favor, digite seu email');
+      return;
+    }
+
+    if (passwordController.text.isEmpty) {
+      _showError('Por favor, digite sua senha');
+      return;
+    }
+
+    // Validação de email básica
+    if (!emailController.text.contains('@')) {
+      _showError('Por favor, digite um email válido');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+
+      // Verificar se o login foi bem-sucedido
+      if (response.user != null) {
+        debugPrint('Login bem-sucedido: ${response.user!.email}');
+
+        if (mounted) {
+          await Navigator.of(context).pushReplacementNamed(
+            RoutesEnum.home.route,
+          );
+        }
+      } else {
+        _showError('Erro ao fazer login. Tente novamente.');
+      }
+    } on AuthException catch (e) {
+      // Erros específicos do Supabase
+      debugPrint('Erro de autenticação: ${e.message}');
+
+      String errorMessage;
+      switch (e.message.toLowerCase()) {
+        case 'invalid login credentials':
+        case 'invalid credentials':
+          errorMessage = 'Email ou senha incorretos';
+          break;
+        case 'email not confirmed':
+          errorMessage = 'Email não confirmado. Verifique sua caixa de entrada';
+          break;
+        default:
+          errorMessage = 'Erro ao fazer login: ${e.message}';
+      }
+
+      _showError(errorMessage);
+    } catch (e) {
+      // Outros erros (rede, etc)
+      debugPrint('Erro inesperado: $e');
+      _showError('Erro de conexão. Verifique sua internet e tente novamente.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Exibe mensagem de erro
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +131,7 @@ class LoginScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         const Image(
-                          image: AssetImage('assets/logos/logo_login.png'),
+                          image: AssetImage('assets/logos/talknet_logo.png'),
                           height: 280,
                         ),
                         const SizedBox(height: 18),
@@ -57,41 +154,31 @@ class LoginScreen extends StatelessWidget {
                           controller: passwordController,
                         ),
                         Align(
-                          alignment: AlignmentGeometry.centerRight,
+                          alignment: Alignment.centerRight,
                           child: CustomTextButton(
                             buttonText: 'Esqueci minha senha',
-                            buttonAction: () {},
+                            buttonAction: _isLoading ? null : () {},
                           ),
                         ),
                         const SizedBox(height: 18),
-                        CustomButton(
-                          buttonText: 'Entrar',
-                          backgroundColor: AppColors.primaryBlue,
-                          buttonAction: () async {
-                            final navigator = Navigator.of(context);
-                            final supabase = Supabase.instance.client;
-
-                            final response = await supabase.auth
-                                .signInWithPassword(
-                                  password: passwordController.text,
-                                  email: emailController.text,
-                                );
-
-                            debugPrint(response.user.toString());
-                            await navigator.pushReplacementNamed(
-                              RoutesEnum.home.route,
-                            );
-                          },
-                        ),
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : CustomButton(
+                                buttonText: 'Entrar',
+                                backgroundColor: AppColors.primaryBlue,
+                                buttonAction: _handleLogin,
+                              ),
                         const SizedBox(height: 18),
                         CustomTextButton(
                           buttonText: 'Não tem uma conta? Cadastre-se',
-                          buttonAction: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              RoutesEnum.register.route,
-                            ); // Named route
-                          },
+                          buttonAction: _isLoading
+                              ? null
+                              : () async {
+                                  await Navigator.pushNamed(
+                                    context,
+                                    RoutesEnum.register.route,
+                                  );
+                                },
                         ),
                       ],
                     ),
