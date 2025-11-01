@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
+import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Tela inicial após o login bem-sucedido
@@ -17,21 +18,43 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _textController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Verificar sessão ao iniciar
+    _checkSession();
+  }
+
+  void _checkSession() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed(RoutesEnum.login.route);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Screen'),
-        backgroundColor: const Color(0xFF03A9F4),
+        backgroundColor: AppColors.backgroundLight,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              final navigator = Navigator.of(context);
-              await Supabase.instance.client.auth.signOut();
-              await navigator.pushReplacementNamed(
-                RoutesEnum.login.route,
-              );
+              try {
+                await Supabase.instance.client.auth.signOut();
+                if (mounted) {
+                  await Navigator.of(context).pushReplacementNamed(
+                    RoutesEnum.login.route,
+                  );
+                }
+              } catch (e) {
+                debugPrint('Erro ao fazer logout: $e');
+              }
             },
           ),
         ],
@@ -47,6 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
 }
 
 /// Componente de chat
@@ -61,6 +90,15 @@ class ChatComponent extends StatefulWidget {
 class _ChatComponentState extends State<ChatComponent> {
   @override
   Widget build(BuildContext context) {
+    final currentUser = Supabase.instance.client.auth.currentUser;
+
+    // Proteção contra sessão expirada
+    if (currentUser == null) {
+      return const Expanded(
+        child: Center(child: Text('Sessão expirada')),
+      );
+    }
+
     return StreamBuilder(
       stream: Supabase.instance.client
           .from('chatRoom')
@@ -93,9 +131,7 @@ class _ChatComponentState extends State<ChatComponent> {
               return Padding(
                 padding: const EdgeInsets.all(8),
                 child: Align(
-                  alignment:
-                      messages[index]['from_id'] ==
-                          Supabase.instance.client.auth.currentUser!.id
+                  alignment: messages[index]['from_id'] == currentUser.id
                       ? Alignment.centerRight
                       : Alignment.centerLeft,
                   child: Container(
@@ -131,6 +167,8 @@ class InputComponent extends StatefulWidget {
 }
 
 class _InputComponentState extends State<InputComponent> {
+  bool _isSending = false;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -145,28 +183,50 @@ class _InputComponentState extends State<InputComponent> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () async {
-              // Lógica para enviar a mensagem
-              final content = widget.controller.text;
-              debugPrint(
-                'user data: '
-                '${Supabase.instance.client.auth.currentUser}',
-              );
-              if (content.isNotEmpty) {
-                await Supabase.instance.client.from('chatRoom').insert({
-                  'content': content,
-                  'from_id': Supabase.instance.client.auth.currentUser!.id,
-                  'from_name': Supabase
-                      .instance
-                      .client
-                      .auth
-                      .currentUser!
-                      .userMetadata?['full_name'],
-                });
-                widget.controller.clear();
-              }
-            },
+            icon: _isSending
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.send),
+            onPressed: _isSending
+                ? null
+                : () async {
+                    final content = widget.controller.text;
+                    final currentUser =
+                        Supabase.instance.client.auth.currentUser;
+
+                    if (currentUser == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Sessão expirada')),
+                      );
+                      return;
+                    }
+
+                    if (content.isEmpty) return;
+
+                    setState(() => _isSending = true);
+
+                    try {
+                      await Supabase.instance.client.from('chatRoom').insert({
+                        'content': content,
+                        'from_id': currentUser.id,
+                        'from_name': currentUser.userMetadata?['full_name'],
+                      });
+                      widget.controller.clear();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erro ao enviar: $e')),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() => _isSending = false);
+                      }
+                    }
+                  },
           ),
         ],
       ),
