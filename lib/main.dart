@@ -32,7 +32,7 @@ class MainApp extends StatelessWidget {
       routes: {
         RoutesEnum.login.route: (context) => LoginScreen(),
         RoutesEnum.register.route: (context) => const RegisterScreen(),
-        //RoutesEnum.home.route: (context) => const HomeScreen(),
+        RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),
         //RoutesEnum.chat.route: (context) => const ChatScreen(),
       },
