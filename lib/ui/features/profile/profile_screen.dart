@@ -21,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileViewModel _viewModel;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     // Inicializar o ViewModel com o repository
     final repository = ProfileRepositoryImplementation(
@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _viewModel.addListener(_onViewModelChanged);
 
     // Carregar o perfil
-    await _loadProfile();
+    _loadProfile();
   }
 
   @override
