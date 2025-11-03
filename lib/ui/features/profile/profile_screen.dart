@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/repositories/implementations/profile_repository_implementation.dart';
 import 'package:flutter_talknet_app/ui/features/profile/profile_view_model.dart';
@@ -19,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileViewModel _viewModel;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     // Inicializar o ViewModel com o repository
     final repository = ProfileRepositoryImplementation(
@@ -31,13 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _viewModel.addListener(_onViewModelChanged);
 
     // Carregar o perfil
-    _loadProfile();
+    await _loadProfile();
   }
 
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.dispose();
     super.dispose();
   }
 
@@ -50,16 +51,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfile() async {
     try {
       await _viewModel.loadProfile();
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
-        _showError('Erro ao carregar perfil: ${e.toString()}');
+        _showError('Erro ao carregar perfil: $e');
       }
     }
   }
 
   /// Mostra opções de escolha de imagem
   Future<void> _showImageOptions() async {
-    showModalBottomSheet(
+    unawaited(showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -88,23 +89,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.pop(context);
                   try {
                     await _viewModel.pickImage();
-                  } catch (e) {
+                  } on Exception catch(e) {
                     if (mounted) {
-                      _showError('Erro ao selecionar imagem: ${e.toString()}');
+                      _showError('Erro ao selecionar imagem: $e');
                     }
                   }
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: AppColors.primaryBlue),
+                leading: const Icon(
+                  Icons.camera_alt,
+                  color: AppColors.primaryBlue
+                ),
                 title: const Text('Câmera'),
                 onTap: () async {
                   Navigator.pop(context);
                   try {
                     await _viewModel.takePhoto();
-                  } catch (e) {
+                  } on Exception catch(e) {
                     if (mounted) {
-                      _showError('Erro ao tirar foto: ${e.toString()}');
+                      _showError('Erro ao tirar foto: $e');
                     }
                   }
                 },
@@ -123,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// Salva o perfil
@@ -140,13 +144,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
 
-        await Future.delayed(const Duration(milliseconds: 500));
-
         if (mounted) {
           Navigator.pop(context, true);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         _showError(e.toString());
       }
@@ -338,7 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
+                      color: AppColors.info,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(

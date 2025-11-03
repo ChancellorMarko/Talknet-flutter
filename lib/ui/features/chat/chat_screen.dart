@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _checkSession();
   }
 
-  void _checkSession() {
+  void _checkSession(){
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

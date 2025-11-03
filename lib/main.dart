@@ -11,12 +11,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   await dotenv.load();
 
-  final String supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 'supabaseurl';
-  final String supabaseKey = dotenv.env['SUPABASE_KEY'] ?? 'supabasekey';
+  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 'supabaseurl';
+  final supabaseKey = dotenv.env['SUPABASE_KEY'] ?? 'supabasekey';
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
-  runApp(MainApp());
+  runApp(const MainApp());
 }
 
 /// Aplicação principal
@@ -30,7 +30,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       builder: FToastBuilder(),
       routes: {
-        RoutesEnum.login.route: (context) => LoginScreen(),
+        RoutesEnum.login.route: (context) => const LoginScreen(),
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),

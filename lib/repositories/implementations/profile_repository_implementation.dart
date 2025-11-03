@@ -1,11 +1,15 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_talknet_app/repositories/interfaces/profile_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Implementação do repositório de perfil
 class ProfileRepositoryImplementation implements ProfileRepository {
+  /// Constructor da classe [ProfileRepositoryImplementation]
   ProfileRepositoryImplementation({required this.supabase});
 
+  /// Instância do SupabaseClient
   final SupabaseClient supabase;
 
   @override
@@ -58,8 +62,8 @@ class ProfileRepositoryImplementation implements ProfileRepository {
       try {
         final oldPath = oldAvatarUrl.split('/').last;
         await supabase.storage.from('avatars').remove(['$userId/$oldPath']);
-      } catch (e) {
-        // Continua mesmo se não conseguir remover a foto antiga
+      } on Exception catch (e) {
+        debugPrint('Erro ao remover imagem antiga: $e');
       }
     }
 
@@ -76,7 +80,6 @@ class ProfileRepositoryImplementation implements ProfileRepository {
       filePath,
       bytes,
       fileOptions: const FileOptions(
-        cacheControl: '3600',
         upsert: true,
         contentType: 'image/jpeg',
       ),

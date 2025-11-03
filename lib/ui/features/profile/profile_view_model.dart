@@ -5,13 +5,19 @@ import 'package:flutter_talknet_app/repositories/implementations/profile_reposit
 import 'package:flutter_talknet_app/services/profile_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// ViewModel para a tela de perfil
 class ProfileViewModel extends ChangeNotifier {
-  final ProfileRepositoryImplementation profileRepository;
-
+  /// Constructor da classe [ProfileViewModel]
   ProfileViewModel(this.profileRepository);
 
+  /// Constructor da classe [ProfileViewModel]
+  final ProfileRepositoryImplementation profileRepository;
+
+  /// Controladores de nome do usuário
   final TextEditingController nameController = TextEditingController();
+  /// Controladores de bio do usuário
   final TextEditingController bioController = TextEditingController();
+  /// Controladores de idade do usuário
   final TextEditingController ageController = TextEditingController();
 
   String? _avatarUrl;
@@ -19,10 +25,13 @@ class ProfileViewModel extends ChangeNotifier {
   bool _isLoading = true;
   bool _isSaving = false;
 
-  // Getters
+  /// Getter de avatarUrl
   String? get avatarUrl => _avatarUrl;
+  /// Getter de selectedImage
   File? get selectedImage => _selectedImage;
+  /// Getter de isLoading
   bool get isLoading => _isLoading;
+  /// Getter de isSaving
   bool get isSaving => _isSaving;
 
   // Setters privados
@@ -78,7 +87,7 @@ class ProfileViewModel extends ChangeNotifier {
       if (image != null) {
         _setSelectedImage(image);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Erro ao selecionar imagem: $e');
     }
   }
@@ -90,7 +99,7 @@ class ProfileViewModel extends ChangeNotifier {
       if (photo != null) {
         _setSelectedImage(photo);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Erro ao tirar foto: $e');
     }
   }
@@ -133,7 +142,7 @@ class ProfileViewModel extends ChangeNotifier {
       _setIsSaving(true);
 
       // Upload da imagem se houver uma nova
-      String? finalAvatarUrl = _avatarUrl;
+      var finalAvatarUrl = _avatarUrl;
       if (_selectedImage != null) {
         finalAvatarUrl = await profileRepository.uploadProfilePicture(
           _selectedImage!,
@@ -160,14 +169,6 @@ class ProfileViewModel extends ChangeNotifier {
     } catch (e) {
       _setIsSaving(false);
       rethrow;
-    }
-
-    @override
-    void dispose() {
-      nameController.dispose();
-      bioController.dispose();
-      ageController.dispose();
-      super.dispose();
     }
   }
 }

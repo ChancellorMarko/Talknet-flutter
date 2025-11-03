@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_button.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_text_button.dart';
+import 'package:flutter_talknet_app/utils/routes_enum.dart';
 import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_talknet_app/utils/routes_enum.dart';
 
 /// Tela de login
 class LoginScreen extends StatefulWidget {
@@ -80,16 +80,14 @@ class _LoginScreenState extends State<LoginScreen> {
         case 'invalid login credentials':
         case 'invalid credentials':
           errorMessage = 'Email ou senha incorretos';
-          break;
         case 'email not confirmed':
           errorMessage = 'Email não confirmado. Verifique sua caixa de entrada';
-          break;
         default:
           errorMessage = 'Erro ao fazer login: ${e.message}';
       }
 
       _showError(errorMessage);
-    } catch (e) {
+    } on Exception catch (e) {
       // Outros erros (rede, etc)
       debugPrint('Erro inesperado: $e');
       _showError('Erro de conexão. Verifique sua internet e tente novamente.');
@@ -107,9 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -161,13 +158,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : CustomButton(
-                                buttonText: 'Entrar',
-                                backgroundColor: AppColors.primaryBlue,
-                                buttonAction: _handleLogin,
-                              ),
+                        if (_isLoading)
+                          const CircularProgressIndicator()
+                        else
+                          CustomButton(
+                            buttonText: 'Entrar',
+                            backgroundColor: AppColors.primaryBlue,
+                            buttonAction: _handleLogin,
+                          ),
                         const SizedBox(height: 18),
                         CustomTextButton(
                           buttonText: 'Não tem uma conta? Cadastre-se',

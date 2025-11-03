@@ -84,20 +84,20 @@ class _FormWidgetState extends State<FormWidget> {
             hint: 'Digite seu email',
             label: 'Email',
             controller: widget.viewModel.emailController,
-            validator: (value) => emailValidator(value),
+            validator: emailValidator,
           ),
           CustomInput(
             hint: 'Digite seu nome completo',
             label: 'Nome',
             controller: widget.viewModel.fullNameController,
-            validator: (value) => fullNameValidator(value),
+            validator: fullNameValidator,
           ),
           CustomInput(
             showPasswordToggle: true,
             hint: 'Digite sua senha',
             label: 'Senha',
             controller: widget.viewModel.passwordController,
-            validator: (value) => passwordValidator(value),
+            validator: passwordValidator,
           ),
           CustomInput(
             showPasswordToggle: true,
