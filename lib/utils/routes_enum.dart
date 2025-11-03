@@ -1,3 +1,4 @@
+/// Enumeração das rotas do aplicativo
 enum RoutesEnum {
   /// Rota de login
   login('/login'),
@@ -8,10 +9,10 @@ enum RoutesEnum {
   /// Rota principal do projeto
   home('/home'),
 
-  // Rota de chat
+  /// Rota de chat
   chat('/chat'),
 
-  // Tela de edição de perfil
+  /// Tela de edição de perfil
   profile('/profile');
 
   /// Constructor do Enum [RoutesEnum]
