@@ -6,7 +6,13 @@ enum RoutesEnum {
   register('/register'),
 
   /// Rota principal do projeto
-  home('/home');
+  home('/home'),
+
+  // Rota de chat
+  chat('/chat'),
+
+  // Tela de edição de perfil
+  profile('/profile');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);
