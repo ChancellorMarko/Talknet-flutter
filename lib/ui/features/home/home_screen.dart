@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_talknet_app/repositories/implementations/home_repository_implementation.dart';
+import 'package:flutter_talknet_app/ui/features/home/home_view_model.dart';
+import 'package:flutter_talknet_app/ui/widgets/custom_appbar.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
 import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,204 +16,150 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final HomeViewModel _viewModel;
+
   @override
   void initState() {
     super.initState();
-    _checkSession();
+
+    // Inicializar o ViewModel com o repository
+    final repository = HomeRepositoryImplementation(
+      supabase: Supabase.instance.client,
+    );
+    _viewModel = HomeViewModel(repository);
+
+    // Adicionar listener para atualizar a UI
+    _viewModel.addListener(_onViewModelChanged);
+
+    // Verificar sessão e carregar dados
+    _initializeScreen();
   }
 
-  void _checkSession() {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _initializeScreen() async {
+    // Verificar autenticação
+    if (!_viewModel.checkAuthentication()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacementNamed(RoutesEnum.login.route);
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(RoutesEnum.login.route);
+        }
       });
+      return;
+    }
+
+    // Carregar dados
+    try {
+      await _viewModel.loadInitialData();
+    } catch (e) {
+      if (mounted) {
+        _showError('Erro ao carregar dados: ${e.toString()}');
+      }
     }
   }
 
-  Future<void> _handleLogout() async {
+  Future<void> _handleRefresh() async {
     try {
-      await Supabase.instance.client.auth.signOut();
-      if (mounted) {
-        await Navigator.of(context).pushReplacementNamed(
-          RoutesEnum.login.route,
-        );
-      }
+      await _viewModel.reloadUsers();
     } catch (e) {
-      debugPrint('Erro ao fazer logout: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao fazer logout')),
-        );
+        _showError('Erro ao atualizar: ${e.toString()}');
       }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = Supabase.instance.client.auth.currentUser;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('TalkNet'),
-        backgroundColor: AppColors.primaryBlue,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            tooltip: 'Meu Perfil',
-            onPressed: () async {
-              final result = await Navigator.pushNamed(
-                context,
-                RoutesEnum.profile.route,
-              );
-              // Se o perfil foi atualizado, recarregar a lista
-              if (result == true && mounted) {
-                // Você pode adicionar lógica para recarregar a lista aqui
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sair',
-            onPressed: _handleLogout,
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: 'Home'),
       body: Column(
         children: [
           // Header com informações do usuário logado
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Bem-vindo(a),',
-                  style: TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  currentUser?.userMetadata?['full_name'] ?? 'Usuário',
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Conecte-se com pessoas',
-                  style: TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildHeader(),
 
           // Lista de usuários
-          const Expanded(
-            child: UsersListComponent(),
+          Expanded(
+            child: _buildUsersList(),
           ),
         ],
       ),
     );
   }
-}
 
-/// Componente que exibe a lista de usuários
-class UsersListComponent extends StatefulWidget {
-  /// Construtor da classe [UsersListComponent]
-  const UsersListComponent({super.key});
-
-  @override
-  State<UsersListComponent> createState() => _UsersListComponentState();
-}
-
-class _UsersListComponentState extends State<UsersListComponent> {
-  List<Map<String, dynamic>> _users = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUsers();
-  }
-
-  Future<void> _loadUsers() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-
-      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-
-      if (currentUserId == null) {
-        setState(() {
-          _error = 'Usuário não autenticado';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Buscar usuários (exceto o usuário atual)
-      // Assumindo que você tem uma tabela 'profiles' no Supabase
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select('id, full_name, bio, age, avatar_url')
-          .neq('id', currentUserId)
-          .order('full_name');
-
-      setState(() {
-        _users = List<Map<String, dynamic>>.from(response);
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Erro ao carregar usuários: $e');
-      setState(() {
-        _error = 'Erro ao carregar usuários';
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _navigateToChat(Map<String, dynamic> user) {
-    // Navegar para a tela de chat passando os dados do usuário
-    Navigator.pushNamed(
-      context,
-      RoutesEnum.chat.route, // Você precisará adicionar esta rota
-      arguments: {
-        'userId': user['id'],
-        'userName': user['full_name'],
-        'userAvatar': user['avatar_url'],
-      },
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.primaryBlue,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Bem-vindo(a),',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _viewModel.currentUserName,
+            style: const TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Conecte-se com pessoas',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
+  Widget _buildUsersList() {
+    if (_viewModel.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    if (_error != null) {
+    if (_viewModel.error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -222,7 +171,7 @@ class _UsersListComponentState extends State<UsersListComponent> {
             ),
             const SizedBox(height: 16),
             Text(
-              _error!,
+              _viewModel.error!,
               style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.textLight,
@@ -230,7 +179,7 @@ class _UsersListComponentState extends State<UsersListComponent> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: _loadUsers,
+              onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
             ),
@@ -239,7 +188,7 @@ class _UsersListComponentState extends State<UsersListComponent> {
       );
     }
 
-    if (_users.isEmpty) {
+    if (_viewModel.users.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -259,7 +208,7 @@ class _UsersListComponentState extends State<UsersListComponent> {
             ),
             const SizedBox(height: 8),
             TextButton.icon(
-              onPressed: _loadUsers,
+              onPressed: _handleRefresh,
               icon: const Icon(Icons.refresh),
               label: const Text('Atualizar'),
             ),
@@ -269,18 +218,30 @@ class _UsersListComponentState extends State<UsersListComponent> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadUsers,
+      onRefresh: _handleRefresh,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _users.length,
+        itemCount: _viewModel.users.length,
         itemBuilder: (context, index) {
-          final user = _users[index];
+          final user = _viewModel.users[index];
           return UserCard(
             user: user,
             onTap: () => _navigateToChat(user),
           );
         },
       ),
+    );
+  }
+
+  void _navigateToChat(Map<String, dynamic> user) {
+    Navigator.pushNamed(
+      context,
+      RoutesEnum.chat.route,
+      arguments: {
+        'userId': user['id'],
+        'userName': user['full_name'],
+        'userAvatar': user['avatar_url'],
+      },
     );
   }
 }
@@ -327,7 +288,7 @@ class UserCard extends StatelessWidget {
                 backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
                     ? NetworkImage(avatarUrl)
                     : null,
-                child: avatarUrl == null || avatarUrl.isEmpty
+                child: avatarUrl == null || (avatarUrl as String).isEmpty
                     ? Text(
                         name.isNotEmpty ? name[0].toUpperCase() : '?',
                         style: const TextStyle(
