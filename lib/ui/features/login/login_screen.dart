@@ -15,6 +15,12 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+bool _hasActiveSession() {
+  final supabase = Supabase.instance.client;
+  final session = supabase.auth.currentSession;
+  return session != null;
+}
+
 class _LoginScreenState extends State<LoginScreen> {
   /// Controlador do campo de email
   final TextEditingController emailController = TextEditingController();
@@ -24,6 +30,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// Indica se está processando o login
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Verificar sessão ativa
+    if (_hasActiveSession()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Navigator.of(context).pushReplacementNamed(
+          RoutesEnum.home.route,
+        );
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -154,7 +174,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: CustomTextButton(
                             buttonText: 'Esqueci minha senha',
-                            buttonAction: _isLoading ? null : () {},
+                            buttonAction: _isLoading ? null : () async {
+                              await Navigator.pushNamed(
+                                context,
+                                RoutesEnum.resetPassword.route,
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(height: 18),

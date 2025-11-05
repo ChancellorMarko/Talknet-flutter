@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_talknet_app/ui/features/home/home_screen.dart';
 import 'package:flutter_talknet_app/ui/features/login/login_screen.dart';
+import 'package:flutter_talknet_app/ui/features/password_reset/password_reset_screen.dart';
 import 'package:flutter_talknet_app/ui/features/profile/profile_screen.dart';
 import 'package:flutter_talknet_app/ui/features/register/register_screen.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
@@ -34,6 +35,7 @@ class MainApp extends StatelessWidget {
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),
+        RoutesEnum.resetPassword.route: (context) => const PasswordResetScreen()
         //RoutesEnum.chat.route: (context) => const ChatScreen(),
       },
       initialRoute: RoutesEnum.login.route,
