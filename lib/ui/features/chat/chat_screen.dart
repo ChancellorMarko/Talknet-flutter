@@ -1,6 +1,3 @@
-// TODO: Implementar controle de sessão
-// TODO: Melhorar Arquitatura com viewmodels e services
-
 import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
@@ -26,11 +23,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _checkSession();
   }
 
-  void _checkSession(){
+  void _checkSession() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacementNamed(RoutesEnum.login.route);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Navigator.of(
+          context,
+        ).pushReplacementNamed(RoutesEnum.login.route);
       });
     }
   }
@@ -52,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     RoutesEnum.login.route,
                   );
                 }
-              } catch (e) {
+              } on Exception catch (e) {
                 debugPrint('Erro ao fazer logout: $e');
               }
             },
@@ -215,7 +214,7 @@ class _InputComponentState extends State<InputComponent> {
                         'from_name': currentUser.userMetadata?['full_name'],
                       });
                       widget.controller.clear();
-                    } catch (e) {
+                    } on Exception catch (e) {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Erro ao enviar: $e')),

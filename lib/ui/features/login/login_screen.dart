@@ -174,7 +174,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: CustomTextButton(
                             buttonText: 'Esqueci minha senha',
-                            buttonAction: _isLoading ? null : () {},
+                            buttonAction: _isLoading ? null : () async {
+                              await Navigator.pushNamed(
+                                context,
+                                RoutesEnum.resetPassword.route,
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(height: 18),

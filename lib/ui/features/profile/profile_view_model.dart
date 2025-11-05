@@ -1,23 +1,21 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_talknet_app/repositories/implementations/profile_repository_implementation.dart';
+import 'package:flutter_talknet_app/repositories/interfaces/profile_repository.dart';
 import 'package:flutter_talknet_app/services/profile_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// ViewModel para a tela de perfil
+///
 class ProfileViewModel extends ChangeNotifier {
-  /// Constructor da classe [ProfileViewModel]
-  ProfileViewModel(this.profileRepository);
+  ///
+  ProfileViewModel(this.profileRepository) {
+    _profileService = ProfileService();
+  }
 
-  /// Constructor da classe [ProfileViewModel]
-  final ProfileRepositoryImplementation profileRepository;
+  final ProfileRepository profileRepository;
+  late final ProfileService _profileService;
 
-  /// Controladores de nome do usuário
   final TextEditingController nameController = TextEditingController();
-  /// Controladores de bio do usuário
   final TextEditingController bioController = TextEditingController();
-  /// Controladores de idade do usuário
   final TextEditingController ageController = TextEditingController();
 
   String? _avatarUrl;
@@ -25,13 +23,10 @@ class ProfileViewModel extends ChangeNotifier {
   bool _isLoading = true;
   bool _isSaving = false;
 
-  /// Getter de avatarUrl
+  // Getters
   String? get avatarUrl => _avatarUrl;
-  /// Getter de selectedImage
   File? get selectedImage => _selectedImage;
-  /// Getter de isLoading
   bool get isLoading => _isLoading;
-  /// Getter de isSaving
   bool get isSaving => _isSaving;
 
   // Setters privados
@@ -73,9 +68,11 @@ class ProfileViewModel extends ChangeNotifier {
         ageController.text = profile['age']?.toString() ?? '';
         _setAvatarUrl(profile['avatar_url'] as String?);
       }
+
       _setIsLoading(false);
     } catch (e) {
       _setIsLoading(false);
+      debugPrint('Erro ao carregar perfil: $e');
       rethrow;
     }
   }
@@ -83,24 +80,26 @@ class ProfileViewModel extends ChangeNotifier {
   /// Seleciona uma imagem da galeria
   Future<void> pickImage() async {
     try {
-      final image = await ProfileService().pickImageFromGallery();
+      final image = await _profileService.pickImageFromGallery();
       if (image != null) {
         _setSelectedImage(image);
       }
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Erro ao selecionar imagem: $e');
+      rethrow;
     }
   }
 
   /// Tira uma foto com a câmera
   Future<void> takePhoto() async {
     try {
-      final photo = await ProfileService().takePhotoWithCamera();
+      final photo = await _profileService.takePhotoWithCamera();
       if (photo != null) {
         _setSelectedImage(photo);
       }
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Erro ao tirar foto: $e');
+      rethrow;
     }
   }
 
@@ -142,13 +141,15 @@ class ProfileViewModel extends ChangeNotifier {
       _setIsSaving(true);
 
       // Upload da imagem se houver uma nova
-      var finalAvatarUrl = _avatarUrl;
+      String? finalAvatarUrl = _avatarUrl;
       if (_selectedImage != null) {
+        debugPrint('Fazendo upload da nova imagem...');
         finalAvatarUrl = await profileRepository.uploadProfilePicture(
           _selectedImage!,
           _avatarUrl,
         );
         _setAvatarUrl(finalAvatarUrl);
+        debugPrint('Upload concluído: $finalAvatarUrl');
       }
 
       // Preparar dados do perfil
@@ -162,13 +163,26 @@ class ProfileViewModel extends ChangeNotifier {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
+      debugPrint('Salvando perfil: $profileData');
+
       // Salvar no banco de dados
       await profileRepository.saveProfile(profileData);
+
+      debugPrint('Perfil salvo com sucesso!');
 
       _setIsSaving(false);
     } catch (e) {
       _setIsSaving(false);
+      debugPrint('Erro ao salvar perfil: $e');
       rethrow;
     }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    bioController.dispose();
+    ageController.dispose();
+    super.dispose();
   }
 }

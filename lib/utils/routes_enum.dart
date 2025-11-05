@@ -13,7 +13,10 @@ enum RoutesEnum {
   chat('/chat'),
 
   /// Tela de edição de perfil
-  profile('/profile');
+  profile('/profile'),
+
+  /// Tela para resetar a senha do usuário
+  resetPassword('/passwordReset');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Service que serve a página home
 class HomeService {
   /// Verifica se há um usuário autenticado
   bool isUserAuthenticated() {

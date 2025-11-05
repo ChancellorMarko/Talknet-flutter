@@ -6,6 +6,7 @@ class HomeRepositoryImplementation implements HomeRepository {
   /// Construtor de [HomeRepositoryImplementation]
   HomeRepositoryImplementation({required this.supabase});
 
+  /// Instancia do cliente da supabase
   final SupabaseClient supabase;
 
   @override
