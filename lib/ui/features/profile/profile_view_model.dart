@@ -141,7 +141,7 @@ class ProfileViewModel extends ChangeNotifier {
       _setIsSaving(true);
 
       // Upload da imagem se houver uma nova
-      String? finalAvatarUrl = _avatarUrl;
+      var finalAvatarUrl = _avatarUrl;
       if (_selectedImage != null) {
         debugPrint('Fazendo upload da nova imagem...');
         finalAvatarUrl = await profileRepository.uploadProfilePicture(
