@@ -4,11 +4,11 @@ import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  CustomAppBar({
+  const CustomAppBar({
     required this.title,
     this.height = kToolbarHeight,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final String title;
   final double height;

@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _viewModel.loadInitialData();
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao carregar dados: ${e.toString()}');
+        _showError('Erro ao carregar dados: ${e}');
       }
     }
   }
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _viewModel.reloadUsers();
     } catch (e) {
       if (mounted) {
-        _showError('Erro ao atualizar: ${e.toString()}');
+        _showError('Erro ao atualizar: ${e}');
       }
     }
   }
@@ -285,8 +285,8 @@ class UserCard extends StatelessWidget {
               CircleAvatar(
                 radius: 32,
                 backgroundColor: AppColors.primaryBlue,
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
+                backgroundImage: avatarUrl != null && (avatarUrl.isNotEmpty as bool)
+                    ? NetworkImage(avatarUrl as String)
                     : null,
                 child: avatarUrl == null || (avatarUrl as String).isEmpty
                     ? Text(

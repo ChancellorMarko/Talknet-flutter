@@ -74,7 +74,7 @@ class HomeViewModel extends ChangeNotifier {
       ]);
 
       _setCurrentUserData(results[0] as Map<String, dynamic>?);
-      _setUsers(results[1] as List<Map<String, dynamic>>);
+      _setUsers(results[1]! as List<Map<String, dynamic>>);
       _setIsLoading(false);
     } catch (e) {
       debugPrint('Erro ao carregar dados: $e');
