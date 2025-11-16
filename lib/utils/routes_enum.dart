@@ -1,3 +1,4 @@
+/// Enumeração das rotas do aplicativo
 enum RoutesEnum {
   /// Rota de login
   login('/login'),
@@ -9,7 +10,16 @@ enum RoutesEnum {
   forgotPassword('/forgot-password'),
 
   /// Rota principal do projeto
-  home('/home');
+  home('/home'),
+
+  /// Rota de chat
+  chat('/chat'),
+
+  /// Tela de edição de perfil
+  profile('/profile'),
+
+  /// Tela para resetar a senha do usuário
+  resetPassword('/passwordReset');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);

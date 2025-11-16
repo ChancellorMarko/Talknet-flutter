@@ -1,3 +1,4 @@
+/// Repositório de registro de usuário
 // ignore: one_member_abstracts
 abstract class RegisterRepository {
   /// Envia os dados de registro do usuário para o serviço correspondente

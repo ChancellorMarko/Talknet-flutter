@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Serviço encarregado de realizar registro dos usuários
 class RegisterService {
+  /// Envia os dados de registro do usuário para o serviço correspondente
   Future<void> sendRegister(
     String fullName,
     String email,
