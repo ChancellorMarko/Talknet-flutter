@@ -6,9 +6,6 @@ enum RoutesEnum {
   /// Rota de registro de novo usuário
   register('/register'),
 
-  /// Rota de recuperação de senha
-  forgotPassword('/forgot-password'),
-
   /// Rota principal do projeto
   home('/home'),
 
@@ -19,7 +16,7 @@ enum RoutesEnum {
   profile('/profile'),
 
   /// Tela para resetar a senha do usuário
-  resetPassword('/passwordReset');
+  resetPassword('/resetPassword');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);
