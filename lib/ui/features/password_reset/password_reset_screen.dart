@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_button.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_input.dart';
 import 'package:flutter_talknet_app/ui/widgets/custom_text_button.dart';
+import 'package:flutter_talknet_app/utils/routes_enum.dart';
 import 'package:flutter_talknet_app/utils/style/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -126,7 +127,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         // Por enquanto, vamos voltar ao login
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            Navigator.pop(context);
+            Navigator.of(context).pushReplacementNamed(RoutesEnum.newPassword.route);
           }
         });
       }

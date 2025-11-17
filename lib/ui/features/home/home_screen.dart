@@ -310,7 +310,7 @@ class UserCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            (name as String).isNotEmpty ? (name)[0].toUpperCase() : '?',
+                            (name as String).isNotEmpty ? name : 'Usuário',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
