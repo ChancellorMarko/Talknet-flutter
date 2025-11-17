@@ -8,6 +8,7 @@ import 'package:flutter_talknet_app/ui/features/register/register_screen.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_talknet_app/ui/features/chat/chat_screen.dart';
 
 Future<void> main() async {
   await dotenv.load();
@@ -36,9 +37,12 @@ class MainApp extends StatelessWidget {
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),
-        //RoutesEnum.chat.route: (context) => const ChatScreen(),
+        
+        // 2. DESCOMENTE (OU ADICIONE) ESTA LINHA
+        RoutesEnum.chat.route: (context) => const ChatScreen(),
       },
       initialRoute: RoutesEnum.login.route,
     );
   }
 }
+
