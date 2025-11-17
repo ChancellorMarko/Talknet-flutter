@@ -131,6 +131,18 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Exibe a tela de recuperação de senha
+  void _handleForgotPassword() async {
+    try {
+      await Navigator.pushNamed(
+        context,
+        RoutesEnum.resetPassword.route,
+      );
+    } catch (e) {
+      debugPrint('Erro ao navegar para a tela de recuperação de senha: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,12 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: CustomTextButton(
                             buttonText: 'Esqueci minha senha',
-                            buttonAction: _isLoading ? null : () async {
-                              await Navigator.pushNamed(
-                                context,
-                                RoutesEnum.resetPassword.route,
-                              );
-                            },
+                            buttonAction: _handleForgotPassword,
                           ),
                         ),
                         const SizedBox(height: 18),

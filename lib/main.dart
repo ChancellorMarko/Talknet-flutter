@@ -31,11 +31,11 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       builder: FToastBuilder(),
       routes: {
+        RoutesEnum.resetPassword.route: (context) => const ForgotPasswordScreen(),
         RoutesEnum.login.route: (context) => const LoginScreen(),
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),
-        RoutesEnum.resetPassword.route: (context) => const PasswordResetScreen()
         //RoutesEnum.chat.route: (context) => const ChatScreen(),
       },
       initialRoute: RoutesEnum.login.route,

@@ -290,7 +290,7 @@ class UserCard extends StatelessWidget {
                     : null,
                 child: avatarUrl == null || (avatarUrl as String).isEmpty
                     ? Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        (name as String).isNotEmpty ? (name)[0].toUpperCase() : '?',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -310,7 +310,7 @@ class UserCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            name,
+                            (name as String).isNotEmpty ? (name)[0].toUpperCase() : '?',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -344,7 +344,7 @@ class UserCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      bio,
+                      bio as String,
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textLight,
