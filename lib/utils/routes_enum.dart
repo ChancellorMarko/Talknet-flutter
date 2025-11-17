@@ -16,7 +16,10 @@ enum RoutesEnum {
   profile('/profile'),
 
   /// Tela para resetar a senha do usuário
-  resetPassword('/resetPassword');
+  resetPassword('/resetPassword'),
+
+  /// Tela para inserir nova senha e confirmação de senha
+  newPassword('/newPassword');
 
   /// Constructor do Enum [RoutesEnum]
   const RoutesEnum(this.route);
