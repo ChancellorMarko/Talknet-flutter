@@ -15,14 +15,11 @@ class _ChatScreenState extends State<ChatScreen> {
   late final ChatViewModel _viewModel;
   late final Map<String, dynamic> _routeArgs;
 
-  // Scroll controller para a lista de mensagens
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // O initState roda ANTES do build, mas DEPOIS que os argumentos da rota estão disponíveis.
-    // Usamos o addPostFrameCallback para garantir que o context está pronto.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // 1. Pegar os argumentos passados da HomeScreen
       _routeArgs =
@@ -48,11 +45,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // Método chamado sempre que o viewModel.notifyListeners() é ativado
   void _onViewModelUpdate() {
     if (mounted) {
       setState(() {
-        // Rola para o fim da lista quando novas mensagens chegam
         _scrollToBottom();
       });
     }
@@ -61,15 +56,12 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelUpdate);
-    _viewModel.dispose(); // Essencial para cancelar o stream
+    _viewModel.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  // Rola para o final da lista de mensagens
   void _scrollToBottom() {
-    // Usamos um timer curto para garantir que o ListView foi construído
-    // ANTES de tentarmos rolar.
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -83,7 +75,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Enquanto o viewModel não foi inicializado (primeiro frame)
     if (!mounted || !ModalRoute.of(context)!.isCurrent) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -97,11 +88,9 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // 1. Lista de Mensagens
           Expanded(
             child: _buildMessagesList(),
           ),
-          // 2. Área de Input
           _buildInputArea(),
         ],
       ),
@@ -135,9 +124,13 @@ class _ChatScreenState extends State<ChatScreen> {
         final message = _viewModel.messages[index];
         final isMe = message['sender_id'] == _viewModel.currentUserId;
 
+        //
+        // --- MUDANÇA AQUI: PASSANDO O VIEWMODEL ---
+        //
         return _MessageBubble(
           message: message,
           isMe: isMe,
+          viewModel: _viewModel, // Passa o viewModel
         );
       },
     );
@@ -145,135 +138,187 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Constrói a área de input de texto e botões
   Widget _buildInputArea() {
+    // ... (seu código existente, sem mudança)
     return Container(
       padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, -3), // Sombra no topo
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            // Botão de Câmera
-            IconButton(
-              icon: const Icon(Icons.camera_alt, color: AppColors.primaryBlue),
-              onPressed: _viewModel.takeAndSendPhoto,
-            ),
-            // Botão de Galeria
-            IconButton(
-              icon: const Icon(Icons.photo, color: AppColors.primaryBlue),
-              onPressed: _viewModel.pickAndSendImage,
-            ),
-            // Campo de Texto
-            Expanded(
-              child: TextField(
-                controller: _viewModel.textController,
-                decoration: InputDecoration(
-                  hintText: 'Digite sua mensagem...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                onSubmitted: (_) => _viewModel.sendMessage(),
-              ),
-            ),
-            // Botão de Enviar
-            IconButton(
-              icon: const Icon(Icons.send, color: AppColors.primaryBlue),
-              onPressed: _viewModel.sendMessage,
-            ),
-          ],
-        ),
-      ),
+      // ... (resto do seu _buildInputArea)
     );
   }
 }
 
-// --- Widget separado para a Bolha de Mensagem ---
-// (Isso ajuda a organizar o código)
+//
+// --- WIDGET _MessageBubble COMPLETAMENTE ATUALIZADO ---
+//
 
 class _MessageBubble extends StatelessWidget {
   final Map<String, dynamic> message;
   final bool isMe;
+  final ChatViewModel viewModel; // <-- Recebe o ViewModel
 
   const _MessageBubble({
     required this.message,
     required this.isMe,
+    required this.viewModel,
   });
+
+  // Método para mostrar o menu de Apagar/Editar
+  void _showMessageMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit, color: AppColors.primaryBlue),
+                title: const Text('Editar Mensagem'),
+                onTap: () {
+                  Navigator.pop(ctx); // Fecha o menu
+                  _showEditDialog(context); // Abre o dialog de edição
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: AppColors.error),
+                title: const Text('Apagar Mensagem'),
+                onTap: () {
+                  final messageId = message['id'] as String;
+                  viewModel.deleteMessage(messageId);
+                  Navigator.pop(ctx); // Fecha o menu
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Método para mostrar o Dialog de Edição
+  void _showEditDialog(BuildContext context) {
+    // Controlador SÓ para este dialog
+    final textController =
+        TextEditingController(text: message['content'] as String? ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Editar Mensagem'),
+          content: TextField(
+            controller: textController,
+            autofocus: true,
+            maxLines: null, // Permite quebra de linha
+            decoration: const InputDecoration(
+              hintText: 'Digite sua mensagem...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx); // Cancela
+              },
+              child: const Text('CANCELAR'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Salva a edição
+                final messageId = message['id'] as String;
+                final newContent = textController.text;
+                viewModel.editMessage(messageId, newContent);
+                Navigator.pop(ctx); // Fecha o dialog
+              },
+              child: const Text('SALVAR'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final mediaUrl = message['media_url'] as String?;
     final content = message['content'] as String?;
     final mediaType = message['media_type'] as String?;
+    final isEdited = message['is_edited'] as bool? ?? false; // (Se você criou a coluna)
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isMe ? AppColors.primaryBlue : Colors.grey[300],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft:
-                isMe ? const Radius.circular(16) : const Radius.circular(0),
-            bottomRight:
-                isMe ? const Radius.circular(0) : const Radius.circular(16),
+    // Envolvemos o balão com o GestureDetector
+    return GestureDetector(
+      onLongPress: () {
+        // Só mostra o menu se a mensagem for MINHA
+        if (isMe) {
+          _showMessageMenu(context);
+        }
+      },
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isMe ? AppColors.primaryBlue : Colors.grey[300],
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft:
+                  isMe ? const Radius.circular(16) : const Radius.circular(0),
+              bottomRight:
+                  isMe ? const Radius.circular(0) : const Radius.circular(16),
+            ),
           ),
-        ),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Conteúdo da Mensagem (Texto ou Imagem)
-            if (mediaType == 'image' && mediaUrl != null)
-              // É uma imagem
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  mediaUrl,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.error, color: Colors.red);
-                  },
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.7,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Conteúdo (Texto ou Imagem)
+              if (mediaType == 'image' && mediaUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    mediaUrl,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.error, color: Colors.red);
+                    },
+                  ),
+                )
+              else if (content != null)
+                Text(
+                  content,
+                  style: TextStyle(
+                    color: isMe ? Colors.white : Colors.black87,
+                  ),
+                )
+              else
+                const Text(
+                  '[Mensagem indisponível]',
+                  style: TextStyle(fontStyle: FontStyle.italic),
                 ),
-              )
-            else if (content != null)
-              // É um texto
-              Text(
-                content,
-                style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black87,
+              
+              // Se a mensagem foi editada, mostre um indicador
+              if (isEdited)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    '(editado)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      color: isMe ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
                 ),
-              )
-            else
-              // Tipo desconhecido ou falha
-              const Text(
-                '[Mensagem indisponível]',
-                style: TextStyle(fontStyle: FontStyle.italic),
-              ),
-
-            // TODO: Adicionar a data/hora da mensagem
-            // (Você pode adicionar um 'Text' pequeno aqui com o 'created_at')
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -17,10 +17,12 @@ abstract class ChatRepository {
   /// Retorna a URL pública do arquivo.
   Future<String> uploadMedia(File mediaFile, String conversationId);
 
-  // --- Funções Futuras (para a lista de chats) ---
-  // Por enquanto vamos focar na tela de chat 1-a-1,
-  // mas depois você precisará disso:
+  //
+  // --- ADICIONE ESTAS DUAS LINHAS ---
+  //
+  /// Atualiza o conteúdo de uma mensagem existente.
+  Future<void> editMessage(String messageId, String newContent);
 
-  /// Retorna um Stream com a lista de conversas do usuário logado.
-  // Stream<List<Map<String, dynamic>>> getConversationsStream(String userId);
+  /// Apaga uma mensagem da base de dados.
+  Future<void> deleteMessage(String messageId);
 }

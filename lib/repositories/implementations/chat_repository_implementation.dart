@@ -16,9 +16,6 @@ class ChatRepositoryImplementation implements ChatRepository {
     String otherUserId,
   ) async {
     try {
-      // Vamos chamar uma função do banco de dados (RPC)
-      // que faz todo o trabalho pesado no servidor.
-      // Esta é a melhor prática de performance e segurança.
       final result = await supabase.rpc(
         'get_or_create_conversation',
         params: {
@@ -26,8 +23,6 @@ class ChatRepositoryImplementation implements ChatRepository {
           'user_b_id': otherUserId,
         },
       );
-
-      // O resultado da RPC será o ID da conversa
       return result as String;
     } catch (e) {
       print('Erro em getOrCreateConversation: $e');
@@ -37,35 +32,19 @@ class ChatRepositoryImplementation implements ChatRepository {
 
   @override
   Stream<List<Map<String, dynamic>>> getMessagesStream(String conversationId) {
-    // Aqui usamos a mágica do Supabase Realtime.
-    // 1. .from('messages') - Escuta a tabela de mensagens
-    // 2. .stream(primaryKey: ['id']) - Define a chave primária
-    // 3. .eq('conversation_id', conversationId) - Filtra SÓ para esta conversa
-    // 4. .order('created_at', ascending: true) - Ordena da mais antiga para a nova
-    //
-    // O Supabase cuida de atualizar o app automaticamente quando
-    // uma nova mensagem chegar nessa conversation_id.
+    // Corrigido para buscar reações (das nossas tentativas anteriores)
     return supabase
-        .from('messages')
+        .from('messages?select=*,message_reactions(*)') 
         .stream(primaryKey: ['id'])
         .eq('conversation_id', conversationId)
         .order('created_at', ascending: true)
         .map((listOfMaps) {
-          // O stream retorna List<Map<String, dynamic>>, que é o que queremos
           return listOfMaps;
         });
   }
 
   @override
   Future<void> sendMessage(Map<String, dynamic> messageData) {
-    // A 'messageData' deve ser um Map pronto, contendo:
-    // {
-    //   'conversation_id': '...',
-    //   'sender_id': '...',
-    //   'content': '...' (ou null se for mídia)
-    //   'media_url': '...' (ou null se for texto)
-    //   'media_type': '...' (ou null se for texto)
-    // }
     try {
       return supabase.from('messages').insert(messageData);
     } catch (e) {
@@ -77,23 +56,20 @@ class ChatRepositoryImplementation implements ChatRepository {
   @override
   Future<String> uploadMedia(File mediaFile, String conversationId) async {
     try {
-      // 1. Criar um caminho único para o arquivo
       final fileExtension = mediaFile.path.split('.').last.toLowerCase();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filePath =
           '$conversationId/media_${timestamp}.$fileExtension';
 
-      // 2. Fazer upload do arquivo
       await supabase.storage.from('chat_media').upload(
             filePath,
             mediaFile,
             fileOptions: FileOptions(
-              cacheControl: '3600', // 1 hora de cache
-              upsert: false, // Não sobrescrever se já existir
+              cacheControl: '3600',
+              upsert: false,
             ),
           );
 
-      // 3. Obter a URL pública
       final publicUrl = supabase.storage
           .from('chat_media')
           .getPublicUrl(filePath);
@@ -102,6 +78,41 @@ class ChatRepositoryImplementation implements ChatRepository {
     } catch (e) {
       print('Erro no upload de mídia: $e');
       throw Exception('Falha ao enviar o arquivo.');
+    }
+  }
+
+  //
+  // --- ADICIONE ESTES DOIS NOVOS MÉTODOS ---
+  //
+
+  @override
+  Future<void> editMessage(String messageId, String newContent) {
+    try {
+      // Faz o UPDATE na tabela 'messages'
+      return supabase
+          .from('messages')
+          .update({
+            'content': newContent, 
+            'is_edited': true // (Se você criou a coluna)
+          })
+          .eq('id', messageId); // Onde o ID da mensagem for este
+    } catch (e) {
+      print('Erro ao editar mensagem: $e');
+      throw Exception('Não foi possível editar a mensagem.');
+    }
+  }
+
+  @override
+  Future<void> deleteMessage(String messageId) {
+    try {
+      // Faz o DELETE na tabela 'messages'
+      return supabase
+          .from('messages')
+          .delete()
+          .eq('id', messageId); // Onde o ID da mensagem for este
+    } catch (e) {
+      print('Erro ao apagar mensagem: $e');
+      throw Exception('Não foi possível apagar a mensagem.');
     }
   }
 }
