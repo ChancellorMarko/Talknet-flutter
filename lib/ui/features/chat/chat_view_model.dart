@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_talknet_app/repositories/interfaces/chat_repository.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ChatViewModel extends ChangeNotifier {
   final ChatRepository chatRepository;
@@ -49,6 +50,21 @@ class ChatViewModel extends ChangeNotifier {
   StreamSubscription<List<Map<String, dynamic>>>? _reactionsSubscription;
   StreamSubscription<List<Map<String, dynamic>>>? _presenceSubscription;
   Timer? _typingTimer;
+
+  /// Método privado para solicitar permissões
+  Future<bool> _requestPermissions() async {
+    // Solicita permissão da câmera
+    final cameraStatus = await Permission.camera.request();
+
+    // Solicita permissão de fotos (galeria)
+    final photosStatus = await Permission.photos.request();
+
+    // Para Android mais antigo, usa storage
+    final storageStatus = await Permission.storage.request();
+
+    return cameraStatus.isGranted &&
+        (photosStatus.isGranted || storageStatus.isGranted);
+  }
 
   // --- Lógica Principal ---
 
@@ -151,36 +167,54 @@ class ChatViewModel extends ChangeNotifier {
 
   // --- Lógica de Mídia ---
 
-  /// 3. Pega uma imagem da galeria
+  /// Pega uma imagem da galeria
   Future<void> pickAndSendImage() async {
     if (_conversationId == null) return;
+
     try {
+      print('Iniciando seleção de imagem da galeria...');
+
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85,
         maxWidth: 1920,
+        maxHeight: 1080,
       );
+
       if (image != null) {
+        print('Imagem selecionada: ${image.path}');
         await _uploadAndSendMedia(File(image.path), 'image');
+      } else {
+        print('Nenhuma imagem selecionada');
       }
     } catch (e) {
+      print('Erro detalhado ao selecionar imagem: $e');
       _setError('Erro ao selecionar imagem: $e');
     }
   }
 
-  /// 4. Tira uma foto com a câmera
+  /// Tira uma foto com a câmera
   Future<void> takeAndSendPhoto() async {
     if (_conversationId == null) return;
+
     try {
+      print('Iniciando câmera...');
+
       final XFile? photo = await _imagePicker.pickImage(
         source: ImageSource.camera,
         imageQuality: 85,
         maxWidth: 1920,
+        maxHeight: 1080,
       );
+
       if (photo != null) {
+        print('Foto tirada: ${photo.path}');
         await _uploadAndSendMedia(File(photo.path), 'image');
+      } else {
+        print('Nenhuma foto tirada');
       }
     } catch (e) {
+      print('Erro detalhado ao tirar foto: $e');
       _setError('Erro ao tirar foto: $e');
     }
   }

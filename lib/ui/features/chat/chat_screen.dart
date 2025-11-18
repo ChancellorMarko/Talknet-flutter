@@ -12,24 +12,54 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final ChatViewModel _viewModel;
-  late final Map<String, dynamic> _routeArgs;
+  ChatViewModel? _viewModel;
+  Map<String, dynamic>? _routeArgs;
+  bool _isInitialized = false;
+  String? _errorMessage;
 
-  // Scroll controller para a lista de mensagens
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // O initState roda ANTES do build, mas DEPOIS que os argumentos da rota estão disponíveis.
-    // Usamos o addPostFrameCallback para garantir que o context está pronto.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 1. Pegar os argumentos passados da HomeScreen
-      _routeArgs =
-          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    // Não inicializamos aqui, vamos usar didChangeDependencies
+  }
 
-      final otherUserId = _routeArgs['userId'] as String;
-      final currentUserId = Supabase.instance.client.auth.currentUser!.id;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Só inicializa uma vez
+    if (!_isInitialized && _errorMessage == null) {
+      _initializeChat();
+    }
+  }
+
+  Future<void> _initializeChat() async {
+    try {
+      // 1. Pegar os argumentos - AGORA no didChangeDependencies
+      final args = ModalRoute.of(context)!.settings.arguments;
+
+      if (args == null || args is! Map<String, dynamic>) {
+        throw Exception('Argumentos da rota inválidos ou não fornecidos');
+      }
+
+      _routeArgs = args;
+
+      final otherUserId = _routeArgs!['userId']?.toString();
+      final currentUser = Supabase.instance.client.auth.currentUser;
+
+      if (otherUserId == null) {
+        throw Exception('ID do usuário não fornecido');
+      }
+
+      if (currentUser == null) {
+        throw Exception('Usuário não autenticado');
+      }
+
+      final currentUserId = currentUser.id;
+
+      print('Inicializando chat: $currentUserId -> $otherUserId');
 
       // 2. Inicializar o ViewModel
       _viewModel = ChatViewModel(
@@ -40,38 +70,46 @@ class _ChatScreenState extends State<ChatScreen> {
         otherUserId: otherUserId,
       );
 
-      // 3. Adicionar o listener para redesenhar a tela
-      _viewModel.addListener(_onViewModelUpdate);
+      // 3. Adicionar listener
+      _viewModel!.addListener(_onViewModelUpdate);
 
       // 4. Carregar a conversa
-      _viewModel.loadConversation();
-    });
+      await _viewModel!.loadConversation().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Timeout ao carregar conversa');
+        },
+      );
+
+      // 5. Marcar como inicializado
+      _isInitialized = true;
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      print('Chat inicializado com sucesso');
+    } catch (e) {
+      print('Erro ao inicializar chat: $e');
+      _errorMessage = 'Erro ao carregar conversa: $e';
+
+      if (mounted) {
+        setState(() {});
+      }
+    }
   }
 
-  // Método chamado sempre que o viewModel.notifyListeners() é ativado
   void _onViewModelUpdate() {
-    if (mounted) {
+    if (mounted && _isInitialized) {
       setState(() {
-        // Rola para o fim da lista quando novas mensagens chegam
         _scrollToBottom();
       });
     }
   }
 
-  @override
-  void dispose() {
-    _viewModel.removeListener(_onViewModelUpdate);
-    _viewModel.dispose(); // Essencial para cancelar o stream
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  // Rola para o final da lista de mensagens
   void _scrollToBottom() {
-    // Usamos um timer curto para garantir que o ListView foi construído
-    // ANTES de tentarmos rolar.
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
+      if (_scrollController.hasClients && mounted) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 250),
@@ -81,12 +119,73 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _retryInitialization() {
+    _errorMessage = null;
+    _isInitialized = false;
+    setState(() {});
+    _initializeChat();
+  }
+
+  @override
+  void dispose() {
+    _viewModel?.removeListener(_onViewModelUpdate);
+    _viewModel?.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Enquanto o viewModel não foi inicializado (primeiro frame)
-    if (!mounted || !ModalRoute.of(context)!.isCurrent) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+    // Se houve erro na inicialização
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, size: 64, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _retryInitialization,
+                child: const Text('Tentar Novamente'),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Enquanto não foi inicializado, mostra loading
+    if (!_isInitialized || _viewModel == null || _routeArgs == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Carregando...'),
+          backgroundColor: AppColors.primaryBlue,
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Iniciando conversa...'),
+            ],
+          ),
+        ),
       );
     }
 
@@ -95,8 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_routeArgs['userName'] as String? ?? 'Chat'),
-            // Indicador de status
+            Text(_routeArgs!['userName']?.toString() ?? 'Chat'),
             _buildStatusIndicator(),
           ],
         ),
@@ -104,14 +202,8 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // Indicador de digitando
-          if (_viewModel.isOtherUserTyping) _buildTypingIndicator(),
-
-          // 1. Lista de Mensagens
-          Expanded(
-            child: _buildMessagesList(),
-          ),
-          // 2. Área de Input
+          if (_viewModel!.isOtherUserTyping) _buildTypingIndicator(),
+          Expanded(child: _buildMessagesList()),
           _buildInputArea(),
         ],
       ),
@@ -119,8 +211,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildStatusIndicator() {
-    final isOnline = _viewModel.otherUserPresence['is_online'] == true;
-    final lastSeen = _viewModel.otherUserPresence['last_seen'];
+    final isOnline = _viewModel!.otherUserPresence['is_online'] == true;
+    final lastSeen = _viewModel!.otherUserPresence['last_seen'];
 
     return Text(
       isOnline ? 'Online' : _formatLastSeen(lastSeen),
@@ -132,13 +224,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildTypingIndicator() {
+    final userName = _routeArgs!['userName']?.toString() ?? 'Usuário';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: Colors.grey[100],
       child: Row(
         children: [
           Text(
-            '${_routeArgs['userName']} está digitando...',
+            '$userName está digitando...',
             style: const TextStyle(
               fontSize: 12,
               color: Colors.grey,
@@ -173,51 +267,82 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Constrói a lista de mensagens
   Widget _buildMessagesList() {
-    if (_viewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_viewModel.error != null) {
-      return Center(
-        child: Text('Erro: ${_viewModel.error}'),
-      );
-    }
-
-    if (_viewModel.messages.isEmpty) {
+    if (_viewModel!.isLoading) {
       return const Center(
-        child: Text('Nenhuma mensagem ainda. Diga olá!'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Carregando mensagens...'),
+          ],
+        ),
       );
     }
 
-    // Lista de mensagens
+    if (_viewModel!.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Erro: ${_viewModel!.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _viewModel!.loadConversation(),
+              child: const Text('Tentar Novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_viewModel!.messages.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Nenhuma mensagem ainda.\nDiga olá!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(8.0),
-      itemCount: _viewModel.messages.length,
+      itemCount: _viewModel!.messages.length,
       itemBuilder: (context, index) {
-        final message = _viewModel.messages[index];
-
-        // Verificação segura de tipos
-        final messageId = message['id']?.toString();
-        final senderId = message['sender_id']?.toString();
+        final message = _viewModel!.messages[index];
+        final messageId = message['id']?.toString() ?? '';
+        final senderId = message['sender_id']?.toString() ?? '';
         final content = message['content']?.toString() ?? '';
+        final isMe = senderId == _viewModel!.currentUserId;
 
-        if (messageId == null || senderId == null) {
-          return const SizedBox(); // Mensagem inválida
-        }
-
-        final isMe = senderId == _viewModel.currentUserId;
+        if (messageId.isEmpty) return const SizedBox();
 
         return _MessageBubble(
           message: message,
           isMe: isMe,
-          reactions: _viewModel.messageReactions[messageId] ?? [],
-          onReaction: (emoji) => _viewModel.toggleReaction(messageId, emoji),
+          reactions: _viewModel!.messageReactions[messageId] ?? [],
+          onReaction: (emoji) => _viewModel!.toggleReaction(messageId, emoji),
           onEdit: isMe
               ? () {
-                  _viewModel.startEditingMessage(messageId, content);
+                  _viewModel!.startEditingMessage(messageId, content);
                 }
               : null,
         );
@@ -225,7 +350,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Constrói a área de input de texto e botões
   Widget _buildInputArea() {
     return Container(
       padding: const EdgeInsets.all(8.0),
@@ -236,37 +360,32 @@ class _ChatScreenState extends State<ChatScreen> {
             color: Colors.grey.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: const Offset(0, -3), // Sombra no topo
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: SafeArea(
         child: Column(
           children: [
-            // Indicador de edição
-            if (_viewModel.editingMessageId != null) _buildEditingIndicator(),
-
+            if (_viewModel!.editingMessageId != null) _buildEditingIndicator(),
             Row(
               children: [
-                // Botão de Câmera
                 IconButton(
                   icon: const Icon(
                     Icons.camera_alt,
                     color: AppColors.primaryBlue,
                   ),
-                  onPressed: _viewModel.takeAndSendPhoto,
+                  onPressed: _viewModel!.takeAndSendPhoto,
                 ),
-                // Botão de Galeria
                 IconButton(
                   icon: const Icon(Icons.photo, color: AppColors.primaryBlue),
-                  onPressed: _viewModel.pickAndSendImage,
+                  onPressed: _viewModel!.pickAndSendImage,
                 ),
-                // Campo de Texto
                 Expanded(
                   child: TextField(
-                    controller: _viewModel.textController,
+                    controller: _viewModel!.textController,
                     decoration: InputDecoration(
-                      hintText: _viewModel.editingMessageId != null
+                      hintText: _viewModel!.editingMessageId != null
                           ? 'Editando mensagem...'
                           : 'Digite sua mensagem...',
                       border: OutlineInputBorder(
@@ -280,27 +399,24 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                     onChanged: (text) {
-                      // Atualiza status de digitação
-                      _viewModel.updateTypingStatus(text.isNotEmpty);
+                      _viewModel!.updateTypingStatus(text.isNotEmpty);
                     },
-                    onSubmitted: (_) => _viewModel.sendMessage(),
+                    onSubmitted: (_) => _viewModel!.sendMessage(),
                   ),
                 ),
-                // Botão de Enviar/Salvar
                 IconButton(
                   icon: Icon(
-                    _viewModel.editingMessageId != null
+                    _viewModel!.editingMessageId != null
                         ? Icons.check
                         : Icons.send,
                     color: AppColors.primaryBlue,
                   ),
-                  onPressed: _viewModel.sendMessage,
+                  onPressed: _viewModel!.sendMessage,
                 ),
-                // Botão de cancelar edição
-                if (_viewModel.editingMessageId != null)
+                if (_viewModel!.editingMessageId != null)
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: _viewModel.cancelEditing,
+                    onPressed: _viewModel!.cancelEditing,
                   ),
               ],
             ),
@@ -331,7 +447,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           const Spacer(),
           TextButton(
-            onPressed: _viewModel.cancelEditing,
+            onPressed: _viewModel!.cancelEditing,
             child: const Text(
               'Cancelar',
               style: TextStyle(fontSize: 12),
