@@ -9,6 +9,7 @@ import 'package:flutter_talknet_app/ui/features/register/register_screen.dart';
 import 'package:flutter_talknet_app/utils/routes_enum.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_talknet_app/ui/features/chat/chat_screen.dart';
 
 Future<void> main() async {
   await dotenv.load();
@@ -32,13 +33,14 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       builder: FToastBuilder(),
       routes: {
-        RoutesEnum.resetPassword.route: (context) => const ForgotPasswordScreen(),
+        RoutesEnum.resetPassword.route: (context) =>
+            const ForgotPasswordScreen(),
         RoutesEnum.login.route: (context) => const LoginScreen(),
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
         RoutesEnum.profile.route: (context) => const ProfileScreen(),
         RoutesEnum.newPassword.route: (context) => const NewPasswordScreen(),
-        //RoutesEnum.chat.route: (context) => const ChatScreen(),
+        RoutesEnum.chat.route: (context) => const ChatScreen(),
       },
       initialRoute: RoutesEnum.login.route,
     );

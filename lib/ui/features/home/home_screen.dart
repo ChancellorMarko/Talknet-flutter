@@ -285,12 +285,15 @@ class UserCard extends StatelessWidget {
               CircleAvatar(
                 radius: 32,
                 backgroundColor: AppColors.primaryBlue,
-                backgroundImage: avatarUrl != null && (avatarUrl.isNotEmpty as bool)
+                backgroundImage:
+                    avatarUrl != null && (avatarUrl.isNotEmpty as bool)
                     ? NetworkImage(avatarUrl as String)
                     : null,
                 child: avatarUrl == null || (avatarUrl as String).isEmpty
                     ? Text(
-                        (name as String).isNotEmpty ? (name)[0].toUpperCase() : '?',
+                        (name as String).isNotEmpty
+                            ? (name)[0].toUpperCase()
+                            : '?',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
