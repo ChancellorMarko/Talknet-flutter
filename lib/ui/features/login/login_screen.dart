@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         else
                           CustomButton(
                             buttonText: 'Entrar',
-                            backgroundColor: AppColors.primaryBlue,
+                            backgroundColor: AppColors.primaryRed,
                             buttonAction: _handleLogin,
                           ),
                         const SizedBox(height: 18),

@@ -174,7 +174,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Carregando...'),
-          backgroundColor: AppColors.primaryBlue,
+          backgroundColor: AppColors.primaryRed,
         ),
         body: const Center(
           child: Column(
@@ -198,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
             _buildStatusIndicator(),
           ],
         ),
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.primaryRed,
       ),
       body: Column(
         children: [
@@ -373,12 +373,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 IconButton(
                   icon: const Icon(
                     Icons.camera_alt,
-                    color: AppColors.primaryBlue,
+                    color: AppColors.primaryRed,
                   ),
                   onPressed: _viewModel!.takeAndSendPhoto,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.photo, color: AppColors.primaryBlue),
+                  icon: const Icon(Icons.photo, color: AppColors.primaryRed),
                   onPressed: _viewModel!.pickAndSendImage,
                 ),
                 Expanded(
@@ -409,7 +409,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     _viewModel!.editingMessageId != null
                         ? Icons.check
                         : Icons.send,
-                    color: AppColors.primaryBlue,
+                    color: AppColors.primaryRed,
                   ),
                   onPressed: _viewModel!.sendMessage,
                 ),
@@ -430,18 +430,18 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlue.withOpacity(0.1),
+        color: AppColors.primaryRed.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.edit, size: 16, color: AppColors.primaryBlue),
+          const Icon(Icons.edit, size: 16, color: AppColors.primaryRed),
           const SizedBox(width: 8),
           const Text(
             'Editando mensagem',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.primaryBlue,
+              color: AppColors.primaryRed,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -496,7 +496,7 @@ class _MessageBubble extends StatelessWidget {
             margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isMe ? AppColors.primaryBlue : Colors.grey[300],
+              color: isMe ? AppColors.primaryRed : Colors.grey[300],
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -599,7 +599,7 @@ class _MessageBubble extends StatelessWidget {
         children: reactionCounts.entries.map((entry) {
           return Chip(
             label: Text('${entry.key} ${entry.value}'),
-            backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+            backgroundColor: AppColors.primaryRed.withOpacity(0.1),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             labelStyle: const TextStyle(fontSize: 10),
           );

@@ -65,7 +65,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(widget.title),
-      backgroundColor: AppColors.primaryBlue,
+      backgroundColor: AppColors.primaryRed,
       elevation: 0,
       actions: [
         IconButton(

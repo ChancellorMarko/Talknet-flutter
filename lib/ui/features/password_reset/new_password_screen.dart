@@ -209,7 +209,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                         else
                           CustomButton(
                             buttonText: 'Atualizar Senha',
-                            backgroundColor: AppColors.primaryBlue,
+                            backgroundColor: AppColors.primaryRed,
                             buttonAction: _handleUpdatePassword,
                           ),
                         const SizedBox(height: 18),

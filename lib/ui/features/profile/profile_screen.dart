@@ -82,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 leading: const Icon(
                   Icons.photo_library,
-                  color: AppColors.primaryBlue,
+                  color: AppColors.primaryRed,
                 ),
                 title: const Text('Galeria'),
                 onTap: () async {
@@ -99,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 leading: const Icon(
                   Icons.camera_alt,
-                  color: AppColors.primaryBlue
+                  color: AppColors.primaryRed
                 ),
                 title: const Text('Câmera'),
                 onTap: () async {
@@ -182,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: AppColors.textWhite,
           fontSize: 24,
         ),
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.primaryRed,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -192,7 +192,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
-                color: AppColors.primaryBlue,
+                color: AppColors.primaryRed,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
@@ -226,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 style: const TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryBlue,
+                                  color: AppColors.primaryRed,
                                 ),
                               )
                             : null,
@@ -242,14 +242,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: AppColors.backgroundWhite,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.primaryBlue,
+                                color: AppColors.primaryRed,
                                 width: 2,
                               ),
                             ),
                             child: const Icon(
                               Icons.camera_alt,
                               size: 20,
-                              color: AppColors.primaryBlue,
+                              color: AppColors.primaryRed,
                             ),
                           ),
                         ),
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   else
                     CustomButton(
                       buttonText: 'Salvar Alterações',
-                      backgroundColor: AppColors.primaryBlue,
+                      backgroundColor: AppColors.primaryRed,
                       buttonAction: _saveProfile,
                     ),
 

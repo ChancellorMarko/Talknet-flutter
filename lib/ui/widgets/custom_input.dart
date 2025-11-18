@@ -52,24 +52,24 @@ class CustomInput extends StatelessWidget {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
-                      color: value.text.isEmpty ? Colors.grey : Colors.blue,
+                      color: value.text.isEmpty ? Colors.grey : Colors.redAccent,
                       width: 2,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                      color: Colors.blue,
+                      color: Colors.redAccent,
                       width: 2.5,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
+                    borderSide: const BorderSide(color: Colors.purpleAccent, width: 2.5),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red, width: 2.5),
+                    borderSide: const BorderSide(color: Colors.purpleAccent, width: 2.5),
                   ),
                   labelText: label,
                   hintText: hint,

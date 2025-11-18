@@ -233,7 +233,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           const SizedBox(height: 24),
                           if (_isLoading) const CircularProgressIndicator() else CustomButton(
                                   buttonText: 'Enviar Código',
-                                  backgroundColor: AppColors.primaryBlue,
+                                  backgroundColor: AppColors.primaryRed,
                                   buttonAction: _handleSendCode,
                                 ),
                         ] else ...[
@@ -245,7 +245,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           const SizedBox(height: 24),
                           if (_isLoading) const CircularProgressIndicator() else CustomButton(
                                   buttonText: 'Verificar Código',
-                                  backgroundColor: AppColors.primaryBlue,
+                                  backgroundColor: AppColors.primaryRed,
                                   buttonAction: _handleVerifyCode,
                                 ),
                         ],
