@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ChatViewModel extends ChangeNotifier {
   final ChatRepository chatRepository;
   final String currentUserId;
-  final String otherUserId;
+  final String otherUserId; // ID do usuário com quem estamos conversando
 
   ChatViewModel({
     required this.chatRepository,
@@ -34,18 +34,24 @@ class ChatViewModel extends ChangeNotifier {
 
   // --- Lógica Principal ---
 
+  /// 1. Inicializa a conversa
+  /// Busca o ID da conversa (ou cria um) e começa a ouvir as mensagens.
   Future<void> loadConversation() async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
+      // Usa a RPC que criamos na Parte 2
       _conversationId = await chatRepository.getOrCreateConversation(
         currentUserId,
         otherUserId,
       );
 
+      // Limpa a inscrição antiga, se houver
       await _messagesSubscription?.cancel();
+
+      // Começa a ouvir o Stream de mensagens daquela conversa
       _messagesSubscription = chatRepository
           .getMessagesStream(_conversationId!)
           .listen((newMessages) {
@@ -60,10 +66,11 @@ class ChatViewModel extends ChangeNotifier {
     }
   }
 
+  /// 2. Envia uma mensagem
   Future<void> sendMessage() async {
     final content = textController.text.trim();
     if (content.isEmpty || _conversationId == null) {
-      return;
+      return; // Não envia mensagem vazia
     }
 
     final messageData = {
@@ -75,48 +82,67 @@ class ChatViewModel extends ChangeNotifier {
     };
 
     try {
+      // Limpa o campo de texto IMEDIATAMENTE
       textController.clear();
+      // Envia para o Supabase (o realtime vai atualizar a lista)
       await chatRepository.sendMessage(messageData);
     } catch (e) {
       _setError('Erro ao enviar: $e');
+      // Opcional: recolocar o texto no controller se falhar
       textController.text = content;
     }
   }
 
-  // --- Lógica de Mídia ---
+  // --- Lógica de Mídia (Requisito do PDF) ---
+
+  /// 3. Pega uma imagem da galeria
   Future<void> pickAndSendImage() async {
-    // ... (seu código existente, sem mudança)
+    if (_conversationId == null) return;
+    try {
+      final XFile? image =
+          await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        await _uploadAndSendMedia(File(image.path), 'image');
+      }
+    } catch (e) {
+      _setError('Erro ao selecionar imagem: $e');
+    }
   }
+
+  /// 4. Tira uma foto com a câmera
   Future<void> takeAndSendPhoto() async {
-    // ... (seu código existente, sem mudança)
+    if (_conversationId == null) return;
+    try {
+      final XFile? photo =
+          await _imagePicker.pickImage(source: ImageSource.camera);
+      if (photo != null) {
+        await _uploadAndSendMedia(File(photo.path), 'image');
+      }
+    } catch (e) {
+      _setError('Erro ao tirar foto: $e');
+    }
   }
+
+  /// 5. Faz o upload e registra a mensagem de mídia
   Future<void> _uploadAndSendMedia(File file, String mediaType) async {
-    // ... (seu código existente, sem mudança)
-  }
+    if (_conversationId == null) return;
 
-  //
-  // --- NOVOS MÉTODOS ADICIONADOS ---
-  //
-
-  /// Edita uma mensagem
-  Future<void> editMessage(String messageId, String newContent) async {
-    if (newContent.trim().isEmpty) {
-      // Se o usuário apagar todo o texto, consideramos como "apagar"
-      return deleteMessage(messageId);
-    }
     try {
-      await chatRepository.editMessage(messageId, newContent.trim());
-    } catch (e) {
-      _setError('Falha ao editar mensagem.');
-    }
-  }
+      // 1. Faz o upload (usando o método da Parte 2)
+      final publicUrl =
+          await chatRepository.uploadMedia(file, _conversationId!);
 
-  /// Apaga uma mensagem
-  Future<void> deleteMessage(String messageId) async {
-    try {
-      await chatRepository.deleteMessage(messageId);
+      // 2. Registra a mensagem no banco
+      final messageData = {
+        'conversation_id': _conversationId!,
+        'sender_id': currentUserId,
+        'content': null, // Sem texto
+        'media_url': publicUrl,
+        'media_type': mediaType,
+      };
+      await chatRepository.sendMessage(messageData);
     } catch (e) {
-      _setError('Falha ao apagar mensagem.');
+      _setError('Erro ao enviar mídia: $e');
     }
   }
 
@@ -131,7 +157,7 @@ class ChatViewModel extends ChangeNotifier {
   @override
   void dispose() {
     textController.dispose();
-    _messagesSubscription?.cancel();
+    _messagesSubscription?.cancel(); // Muito importante!
     super.dispose();
   }
 }
