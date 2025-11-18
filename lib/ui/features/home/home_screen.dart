@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: AppColors.primaryBlue,
+        color: AppColors.primaryRed,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -284,7 +284,7 @@ class UserCard extends StatelessWidget {
               // Avatar
               CircleAvatar(
                 radius: 32,
-                backgroundColor: AppColors.primaryBlue,
+                backgroundColor: AppColors.primaryRed,
                 backgroundImage:
                     avatarUrl != null && (avatarUrl.isNotEmpty as bool)
                     ? NetworkImage(avatarUrl as String)
@@ -330,7 +330,7 @@ class UserCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryBlue,
+                              color: AppColors.primaryRed,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(

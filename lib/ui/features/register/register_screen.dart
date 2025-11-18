@@ -110,7 +110,7 @@ class _FormWidgetState extends State<FormWidget> {
           CustomButton(
             icon: widget.viewModel.isLoading ? Icons.hourglass_empty : null,
             buttonText: 'Registrar',
-            backgroundColor: AppColors.primaryBlue,
+            backgroundColor: AppColors.primaryRed,
             buttonAction: () async =>
                 widget.viewModel.registerButtonAction(context),
           ),

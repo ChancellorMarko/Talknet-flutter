@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 // ==================== PALETA DE CORES ====================
 
 class AppColors {
-  /// Cor azul primária do aplicativo
-  static const Color primaryBlue = Color(0xFF2E5BFF);
-  /// Cor verde primária do aplicativo
-  static const Color primaryGreen = Color(0xFF00A896);
+  /// Cor vermelha primária do aplicativo
+  static const Color primaryRed = Color(0xFFC52F3B);
+  /// Cor rosa primária do aplicativo
+  static const Color primaryPink = Color(0xFFC52F86);
 
   /// Cor amarela secundária do aplicativo
   static const Color secondaryGold = Color(0xFFFFD166);
@@ -40,7 +40,7 @@ class AppColors {
   /// Cor de status erro
   static const Color error = Color(0xFFF56565);
   /// Cor de informação
-  static const Color info = Color(0xFF4299E1);
+  static const Color info = Color(0xFFC52F86);
 
   /// Cor de sombra leve
   static const Color shadowLight = Color(0x0F000000);

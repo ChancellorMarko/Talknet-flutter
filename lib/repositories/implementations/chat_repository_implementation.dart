@@ -71,6 +71,16 @@ class ChatRepositoryImplementation implements ChatRepository {
   @override
   Future<String> uploadMedia(File mediaFile, String conversationId) async {
     try {
+      // Verificar se o arquivo existe
+      if (!await mediaFile.exists()) {
+        throw Exception('Arquivo não encontrado');
+      }
+
+      // Validar tamanho do arquivo
+      if (!_isValidFileSize(mediaFile)) {
+        throw Exception('Arquivo muito grande. Tamanho máximo: 20MB');
+      }
+
       // 1. Criar um caminho único para o arquivo
       final fileExtension = mediaFile.path.split('.').last.toLowerCase();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -78,19 +88,31 @@ class ChatRepositoryImplementation implements ChatRepository {
       final filePath =
           '$conversationId/media_${timestamp}_$randomString.$fileExtension';
 
-      // 2. Fazer upload do arquivo (nova API retorna String diretamente)
-      final uploadedPath = await supabase.storage
+      print('Fazendo upload para: $filePath');
+
+      // 2. Fazer upload do arquivo
+      await supabase.storage
           .from('chat_media')
-          .upload(filePath, mediaFile);
+          .uploadBinary(filePath, await mediaFile.readAsBytes());
 
       // 3. Obter a URL pública
       final publicUrl = supabase.storage
           .from('chat_media')
-          .getPublicUrl(uploadedPath);
+          .getPublicUrl(filePath);
 
+      print('Upload realizado com sucesso: $publicUrl');
       return publicUrl;
     } catch (e) {
-      print('Erro no upload de mídia: $e');
+      print('Erro detalhado no upload: $e');
+
+      // Tratamento específico para erros de bucket
+      if (e.toString().contains('Bucket not found') ||
+          e.toString().contains('chat_media')) {
+        throw Exception(
+          'Bucket chat_media não configurado corretamente no Supabase',
+        );
+      }
+
       throw Exception('Falha ao enviar o arquivo: $e');
     }
   }
